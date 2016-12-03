@@ -3,15 +3,19 @@ import System.Environment(getArgs)
 type Password = String
 
 errorTooManyArgs = "Masterpass takes one argument, which is a file of words.\n\
-    \If no argument is given, /usr/share/dictionary/words is used."
+    \If no argument is given, " ++ macStandardWords ++ "is used."
 
 ne = error "Not implemented"
 
+-- IO and impure --
+-------------------
+
+macStandardWords = "/usr/share/dict/words"
 -- The standard dictionary.
 -- TODO: Make the path returned be OS dependent. Current implementation is
 -- OSX only.
 standardWords :: IO FilePath
-standardWords = return "/usr/share/dictionary/words"
+standardWords = return macStandardWords
 
 main = do
     args <- getArgs
