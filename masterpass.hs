@@ -76,7 +76,7 @@ generateRandomPass c = do
     -- inserting special characters and for inserting numbers.
     rands <- sequence $ take 4 $ [ newStdGen | x <- [1..] ]
     let words = lines wordsString
-        password = getRandomWords (nbrOfWords c) words (rands !! 0)
+        password = getRandomWords (nbrOfWords c) (rands !! 0) words
         password' =
             if useNumber c
                then randomMakeUpperCase password (rands !! 1)
@@ -95,12 +95,12 @@ generateRandomPass c = do
 ----------
 
 -- Return an infinite list of  elements randomly picked from input list.
-pickRandoms :: [a] -> StdGen -> [a]
-pickRandoms list g = [ list !! x | x <- randomRs (0, length list - 1) g ]
+pickRandoms :: StdGen -> [a] -> [a]
+pickRandoms g list = [ list !! x | x <- randomRs (0, length list - 1) g ]
 
 -- Construct a password of random words from the word list.
-getRandomWords :: Int -> [String] -> StdGen -> Password
-getRandomWords numberOfWords words = concat . take numberOfWords . pickRandoms words
+getRandomWords :: Int -> StdGen -> [String] -> Password
+getRandomWords numberOfWords g = concat . take numberOfWords . pickRandoms g
 
 -- Inserts a character from a list in a random place into a password.
 randomInsertChar :: [Char] -> Password -> StdGen -> Password
