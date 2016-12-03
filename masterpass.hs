@@ -1,3 +1,4 @@
+import Data.Char(intToDigit)
 import Flags
 import System.Directory(doesFileExist)
 import System.Environment(getArgs)
@@ -7,7 +8,8 @@ type Password = String
 data Config = Config {wordsFile :: FilePath,
                       nbrOfWords :: Int,
                       useSpecialChars :: Bool,
-                      specialChars :: [Char]
+                      specialChars :: [Char],
+                      useNumber :: Bool
                      }
 
 -- Constants --
@@ -23,8 +25,10 @@ standardWordDicts = [
     "/var/lib/dict/words"]
 standardNrbOfWords = 3
 standardSpecialChars = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+digits = map intToDigit [0..9]
 flagUseSpecials = "use-specials"
 flagSpecialsList = "s"
+flagUseNumber = "s"
 
 -- Set new functions equal to this to make them compile without working.
 ne = error "Not implemented"
@@ -54,7 +58,8 @@ main = do
         nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags,
         useSpecialChars = isSet flagUseSpecials flags
                           || isSet flagSpecialsList flags,
-        specialChars = maybeFlags standardSpecialChars flagSpecialsList flags
+        specialChars = maybeFlags standardSpecialChars flagSpecialsList flags,
+        useNumber = isSet "n" flags
     }
     printPassword config
 
@@ -66,13 +71,20 @@ printPassword c = do
 generateRandomPass :: Config -> IO Password
 generateRandomPass c = do
     wordsString <- readFile (wordsFile c)
-    rand1 <- newStdGen
-    rand2 <- newStdGen
+    -- We use 3 different random numbers gens: for picking words, for picking
+    -- inserting special characters and for inserting numbers.
+    rands <- sequence $ take 3 $ [ newStdGen | x <- [1..] ]
     let words = lines wordsString
-        password = getRandomWords (nbrOfWords c) words rand1
-    return $ if useSpecialChars c
-                then putInSpecial (specialChars c) password rand2
-                else password
+        password = getRandomWords (nbrOfWords c) words (rands !! 0)
+        password' =
+            if useSpecialChars c
+               then randomInsertChar (specialChars c) password (rands !! 1)
+               else password
+        password'' =
+            if useNumber c
+               then randomInsertChar digits password' (rands !! 2)
+               else password'
+    return password''
 
 -- Pure --
 ----------
@@ -85,9 +97,9 @@ pickRandoms list g = [ list !! x | x <- randomRs (0, length list - 1) g ]
 getRandomWords :: Int -> [String] -> StdGen -> Password
 getRandomWords numberOfWords words = concat . take numberOfWords . pickRandoms words
 
--- Inserts a special char in a random place into a password.
-putInSpecial :: [Char] -> Password -> StdGen -> Password
-putInSpecial specials pass g = take r1 pass ++ (specials !! r2:drop r1 pass)
+-- Inserts a character from a list in a random place into a password.
+randomInsertChar :: [Char] -> Password -> StdGen -> Password
+randomInsertChar specials pass g = take r1 pass ++ (specials !! r2:drop r1 pass)
     where
         (r1, g') = randomR (0, length pass - 1) g
         (r2, _) = randomR (0, length specials - 1) g'
