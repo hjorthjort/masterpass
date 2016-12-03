@@ -20,35 +20,37 @@ macStandardWords = "/usr/share/dict/words"
 standardWords :: IO FilePath
 standardWords = return macStandardWords
 
+standardNrbOfWords :: Int
+standardNrbOfWords = 3
+
 main = do
     args <- getArgs
     let flags = getFlags args
     stdFile <- standardWords
     let file = maybeFlags stdFile "f" flags
-    printPassword file
+        nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags
+    -- TODO: Pass a config struct instead of a bunch of parameters.
+    printPassword file nbrOfWords
 
-printPassword :: FilePath -> IO ()
-printPassword wordsFile = do
-    password <- generateRandomPass wordsFile
+printPassword :: FilePath -> Int -> IO ()
+printPassword wordsFile nbrOfWords = do
+    password <- generateRandomPass wordsFile nbrOfWords
     putStrLn password
 
-generateRandomPass :: FilePath -> IO Password
-generateRandomPass wordsFile = do
+generateRandomPass :: FilePath -> Int -> IO Password
+generateRandomPass wordsFile nbrOfWords = do
     wordsString <- readFile wordsFile
     let words = lines wordsString
     rand <- newStdGen
-    return $ constructPassword words rand
+    return $ constructPassword nbrOfWords words rand
 
 -- Pure --
 ----------
-
-numberOfWords :: Int
-numberOfWords = 3
 
 -- Return an infinite list of  elements randomly picked from input list.
 pickRandoms :: [a] -> StdGen -> [a]
 pickRandoms list g = [ list !! x | x <- randomRs (0, length list - 1) g ]
 
 -- Construct a password of random words from the word list.
-constructPassword :: [String] -> StdGen -> Password
-constructPassword words = concat . take numberOfWords . pickRandoms words
+constructPassword :: Int -> [String] -> StdGen -> Password
+constructPassword numberOfWords words = concat . take numberOfWords . pickRandoms words
