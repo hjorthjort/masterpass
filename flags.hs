@@ -1,7 +1,8 @@
 module Flags(
     getFlags,
     isSet,
-    getFlagArg
+    getFlagArg,
+    maybeFlags
             )
     where
 
@@ -34,6 +35,10 @@ isSet f fs
 getFlagArgSafe :: Flag -> FlagList -> Maybe FlagArg
 getFlagArgSafe f fs | isSet f fs =  fromJust $ Map.lookup f fs
                 | otherwise = Nothing
+
+maybeFlags fail flag flags = if isSet flag flags
+                                then getFlagArg flag flags
+                                else fail
 
 getFlagArg :: Flag -> FlagList -> FlagArg
 getFlagArg f fs = fromJust $ getFlagArgSafe f fs

@@ -1,10 +1,12 @@
 import System.Environment(getArgs)
 import System.Random(StdGen, newStdGen, randomRs)
+import Flags
 
 type Password = String
 
 errorTooManyArgs = "Masterpass takes one argument, which is a file of words.\n\
     \If no argument is given, " ++ macStandardWords ++ "is used."
+errorNoFilename = "File flag takes a path as argument"
 
 ne = error "Not implemented"
 
@@ -20,11 +22,10 @@ standardWords = return macStandardWords
 
 main = do
     args <- getArgs
-    case length args of
-      0 -> do standardFile <- standardWords
-              printPassword standardFile
-      1 -> printPassword (head args)
-      2 -> putStrLn errorTooManyArgs
+    let flags = getFlags args
+    stdFile <- standardWords
+    let file = maybeFlags stdFile "f" flags
+    printPassword file
 
 printPassword :: FilePath -> IO ()
 printPassword wordsFile = do
