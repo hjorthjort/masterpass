@@ -1,10 +1,12 @@
 import System.Environment(getArgs)
-import System.Random(StdGen, newStdGen, randomRs)
+import System.Random(StdGen, newStdGen, randomR, randomRs)
 import Flags
 
 type Password = String
-data Config = Config {wordsFile :: FilePath, 
-                      nbrOfWords :: Int
+data Config = Config {wordsFile :: FilePath,
+                      nbrOfWords :: Int,
+                      useSpecialChars :: Bool,
+                      specialChars :: [Char]
                      }
 
 -- Constants --
@@ -15,6 +17,9 @@ errorTooManyArgs = "Masterpass takes one argument, which is a file of words.\n\
 errorNoFilename = "File flag takes a path as argument"
 macStandardWords = "/usr/share/dict/words"
 standardNrbOfWords = 3
+standardSpecialChars = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+flagUseSpecials = "use-specials"
+flagSpecialsList = "s"
 
 -- Set new functions equal to this to make them compile without working.
 ne = error "Not implemented"
@@ -32,10 +37,13 @@ main = do
     args <- getArgs
     let flags = getFlags args
     stdFile <- standardWords
-    let wordsFile = maybeFlags stdFile "f" flags
-        -- |read| is to convert the return value to an integer.
-        nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags
-        config = Config{wordsFile = wordsFile, nbrOfWords = nbrOfWords}
+    let config = Config { 
+        wordsFile = maybeFlags stdFile "f" flags,
+        nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags,
+        useSpecialChars = isSet flagUseSpecials flags 
+                          || isSet flagSpecialsList flags,
+        specialChars = maybeFlags standardSpecialChars flagSpecialsList flags
+    }
     printPassword config
 
 printPassword :: Config -> IO ()
@@ -47,9 +55,12 @@ generateRandomPass :: Config -> IO Password
 generateRandomPass c = do
     wordsString <- readFile (wordsFile c)
     rand1 <- newStdGen
+    rand2 <- newStdGen
     let words = lines wordsString
         password = getRandomWords (nbrOfWords c) words rand1
-    return password
+    return $ if useSpecialChars c
+                then putInSpecial (specialChars c) password rand2
+                else password
 
 -- Pure --
 ----------
@@ -61,3 +72,10 @@ pickRandoms list g = [ list !! x | x <- randomRs (0, length list - 1) g ]
 -- Construct a password of random words from the word list.
 getRandomWords :: Int -> [String] -> StdGen -> Password
 getRandomWords numberOfWords words = concat . take numberOfWords . pickRandoms words
+
+-- Inserts a special char in a random place into a password.
+putInSpecial :: [Char] -> Password -> StdGen -> Password
+putInSpecial specials pass g = take r1 pass ++ (specials !! r2:drop r1 pass)
+    where
+        (r1, g') = randomR (0, length pass - 1) g
+        (r2, _) = randomR (0, length specials - 1) g'
