@@ -47,7 +47,7 @@ numberOfWords = 3
 
 -- Return an infinite list of  elements randomly picked from input list.
 pickRandoms :: [a] -> StdGen -> [a]
-pickRandoms list g = [ list !! x | x <- randomRs (0, length list) g ]
+pickRandoms list g = [ list !! x | x <- randomRs (0, length list - 1) g ]
 
 -- Construct a password of random words from the word list.
 constructPassword :: [String] -> StdGen -> Password
