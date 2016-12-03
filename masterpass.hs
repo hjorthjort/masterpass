@@ -1,4 +1,4 @@
-import Data.Char(intToDigit)
+import Data.Char(intToDigit, isAlpha, isUpper, toUpper)
 import Flags
 import System.Directory(doesFileExist)
 import System.Environment(getArgs)
@@ -29,6 +29,7 @@ digits = map intToDigit [0..9]
 flagUseSpecials = "use-specials"
 flagSpecialsList = "s"
 flagUseNumber = "s"
+flagSetUpperCase = "u"
 
 -- Set new functions equal to this to make them compile without working.
 ne = error "Not implemented"
@@ -73,18 +74,22 @@ generateRandomPass c = do
     wordsString <- readFile (wordsFile c)
     -- We use 3 different random numbers gens: for picking words, for picking
     -- inserting special characters and for inserting numbers.
-    rands <- sequence $ take 3 $ [ newStdGen | x <- [1..] ]
+    rands <- sequence $ take 4 $ [ newStdGen | x <- [1..] ]
     let words = lines wordsString
         password = getRandomWords (nbrOfWords c) words (rands !! 0)
         password' =
-            if useSpecialChars c
-               then randomInsertChar (specialChars c) password (rands !! 1)
+            if useNumber c
+               then randomMakeUpperCase password (rands !! 1)
                else password
         password'' =
-            if useNumber c
-               then randomInsertChar digits password' (rands !! 2)
+            if useSpecialChars c
+               then randomInsertChar (specialChars c) password' (rands !! 2)
                else password'
-    return password''
+        password''' =
+            if useNumber c
+               then randomInsertChar digits password'' (rands !! 3)
+               else password''
+    return password'''
 
 -- Pure --
 ----------
@@ -99,7 +104,20 @@ getRandomWords numberOfWords words = concat . take numberOfWords . pickRandoms w
 
 -- Inserts a character from a list in a random place into a password.
 randomInsertChar :: [Char] -> Password -> StdGen -> Password
-randomInsertChar specials pass g = take r1 pass ++ (specials !! r2:drop r1 pass)
+randomInsertChar specials pass g = insert r1 (specials !! r2) pass
     where
         (r1, g') = randomR (0, length pass - 1) g
         (r2, _) = randomR (0, length specials - 1) g'
+
+randomMakeUpperCase :: Password -> StdGen -> Password
+randomMakeUpperCase password g 
+  | any isUpper password = password
+  | otherwise = replace r1 (toUpper $ password !! r1) password
+    where
+        (r1, _) = randomR (0, length password - 1) g
+
+insert :: Int -> a -> [a] -> [a]
+insert pos elem list = take pos list ++ (elem:drop pos list)
+
+replace :: Int -> a -> [a] -> [a]
+replace pos elem list = take pos list ++ (elem:drop (pos+1)  list)
