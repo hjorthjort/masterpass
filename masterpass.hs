@@ -13,9 +13,13 @@ data Config = Config {wordsFile :: FilePath,
 ---------------
 
 errorTooManyArgs = "Masterpass takes one argument, which is a file of words.\n\
-    \If no argument is given, " ++ macStandardWords ++ "is used."
+    \If no argument is given, the program looks for a list of commonly used \
+    \dictionary files"
 errorNoFilename = "File flag takes a path as argument"
-macStandardWords = "/usr/share/dict/words"
+standardWordDicts = [
+    "usr/dict/words",
+    "/usr/share/dict/words",
+    "/var/lib/dict/words"]
 standardNrbOfWords = 3
 standardSpecialChars = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 flagUseSpecials = "use-specials"
@@ -31,7 +35,13 @@ ne = error "Not implemented"
 -- TODO: Make the path returned be OS dependent. Current implementation is
 -- OSX only.
 standardWords :: IO FilePath
-standardWords = return macStandardWords
+standardWords = standardWords' standardWordDicts
+    where
+        standardWords' dicts = do
+            exists <- doesFileExist (head dicts)
+            if exists
+               then return $ head dicts
+               else standardWords' (tail dicts)
 
 main = do
     args <- getArgs
