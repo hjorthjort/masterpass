@@ -1,6 +1,7 @@
+import Flags
+import System.Directory(doesFileExist)
 import System.Environment(getArgs)
 import System.Random(StdGen, newStdGen, randomR, randomRs)
-import Flags
 
 type Password = String
 data Config = Config {wordsFile :: FilePath,
@@ -47,11 +48,11 @@ main = do
     args <- getArgs
     let flags = getFlags args
     stdFile <- standardWords
-    let config = Config { 
+    let config = Config {
         -- TODO: Allow using multiple files, e.g., for several languages.
         wordsFile = maybeFlags stdFile "f" flags,
         nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags,
-        useSpecialChars = isSet flagUseSpecials flags 
+        useSpecialChars = isSet flagUseSpecials flags
                           || isSet flagSpecialsList flags,
         specialChars = maybeFlags standardSpecialChars flagSpecialsList flags
     }
