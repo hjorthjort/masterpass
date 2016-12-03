@@ -3,6 +3,9 @@ import System.Random(StdGen, newStdGen, randomRs)
 import Flags
 
 type Password = String
+data Config = Config {wordsFile :: FilePath, 
+                      nbrOfWords :: Int
+                     }
 
 -- Constants --
 ---------------
@@ -29,22 +32,24 @@ main = do
     args <- getArgs
     let flags = getFlags args
     stdFile <- standardWords
-    let file = maybeFlags stdFile "f" flags
+    let wordsFile = maybeFlags stdFile "f" flags
+        -- |read| is to convert the return value to an integer.
         nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags
-    -- TODO: Pass a config struct instead of a bunch of parameters.
-    printPassword file nbrOfWords
+        config = Config{wordsFile = wordsFile, nbrOfWords = nbrOfWords}
+    printPassword config
 
-printPassword :: FilePath -> Int -> IO ()
-printPassword wordsFile nbrOfWords = do
-    password <- generateRandomPass wordsFile nbrOfWords
+printPassword :: Config -> IO ()
+printPassword c = do
+    password <- generateRandomPass c
     putStrLn password
 
-generateRandomPass :: FilePath -> Int -> IO Password
-generateRandomPass wordsFile nbrOfWords = do
-    wordsString <- readFile wordsFile
+generateRandomPass :: Config -> IO Password
+generateRandomPass c = do
+    wordsString <- readFile (wordsFile c)
+    rand1 <- newStdGen
     let words = lines wordsString
-    rand <- newStdGen
-    return $ constructPassword nbrOfWords words rand
+        password = getRandomWords (nbrOfWords c) words rand1
+    return password
 
 -- Pure --
 ----------
@@ -54,5 +59,5 @@ pickRandoms :: [a] -> StdGen -> [a]
 pickRandoms list g = [ list !! x | x <- randomRs (0, length list - 1) g ]
 
 -- Construct a password of random words from the word list.
-constructPassword :: Int -> [String] -> StdGen -> Password
-constructPassword numberOfWords words = concat . take numberOfWords . pickRandoms words
+getRandomWords :: Int -> [String] -> StdGen -> Password
+getRandomWords numberOfWords words = concat . take numberOfWords . pickRandoms words
