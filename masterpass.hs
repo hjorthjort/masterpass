@@ -4,24 +4,26 @@ import Flags
 
 type Password = String
 
+-- Constants --
+---------------
+
 errorTooManyArgs = "Masterpass takes one argument, which is a file of words.\n\
     \If no argument is given, " ++ macStandardWords ++ "is used."
 errorNoFilename = "File flag takes a path as argument"
+macStandardWords = "/usr/share/dict/words"
+standardNrbOfWords = 3
 
+-- Set new functions equal to this to make them compile without working.
 ne = error "Not implemented"
 
 -- IO and impure --
 -------------------
 
-macStandardWords = "/usr/share/dict/words"
 -- The standard dictionary.
 -- TODO: Make the path returned be OS dependent. Current implementation is
 -- OSX only.
 standardWords :: IO FilePath
 standardWords = return macStandardWords
-
-standardNrbOfWords :: Int
-standardNrbOfWords = 3
 
 main = do
     args <- getArgs
