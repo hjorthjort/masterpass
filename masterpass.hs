@@ -38,6 +38,7 @@ main = do
     let flags = getFlags args
     stdFile <- standardWords
     let config = Config { 
+        -- TODO: Allow using multiple files, e.g., for several languages.
         wordsFile = maybeFlags stdFile "f" flags,
         nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags,
         useSpecialChars = isSet flagUseSpecials flags 
