@@ -9,7 +9,8 @@ data Config = Config {wordsFile :: FilePath,
                       nbrOfWords :: Int,
                       useSpecialChars :: Bool,
                       specialChars :: [Char],
-                      useNumber :: Bool
+                      useNumber :: Bool,
+                      useUpperCase :: Bool
                      }
 
 -- Constants --
@@ -28,8 +29,8 @@ standardSpecialChars = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 digits = map intToDigit [0..9]
 flagUseSpecials = "use-specials"
 flagSpecialsList = "s"
-flagUseNumber = "s"
-flagSetUpperCase = "u"
+flagUseNumber = "n"
+flagUseUpperCase = "u"
 
 -- Set new functions equal to this to make them compile without working.
 ne = error "Not implemented"
@@ -60,7 +61,8 @@ main = do
         useSpecialChars = isSet flagUseSpecials flags
                           || isSet flagSpecialsList flags,
         specialChars = maybeFlags standardSpecialChars flagSpecialsList flags,
-        useNumber = isSet "n" flags
+        useNumber = isSet flagUseNumber flags,
+        useUpperCase = isSet flagUseUpperCase  flags
     }
     printPassword config
 
@@ -78,7 +80,7 @@ generateRandomPass c = do
     let words = lines wordsString
         password = getRandomWords (nbrOfWords c) (rands !! 0) words
         password' =
-            if useNumber c
+            if useUpperCase c
                then randomMakeUpperCase password (rands !! 1)
                else password
         password'' =
