@@ -20,6 +20,8 @@ errorTooManyArgs = "Masterpass takes one argument, which is a file of words.\n\
     \If no argument is given, the program looks for a list of commonly used \
     \dictionary files"
 errorNoFilename = "File flag takes a path as argument"
+-- TODO: Look in more places, to accomodate Windows. Current implementation is
+-- only for Unix systems. 
 standardWordDicts = [
     "usr/dict/words",
     "/usr/share/dict/words",
@@ -39,8 +41,6 @@ ne = error "Not implemented"
 -------------------
 
 -- The standard dictionary.
--- TODO: Make the path returned be OS dependent. Current implementation is
--- OSX only.
 standardWords :: IO FilePath
 standardWords = standardWords' standardWordDicts
     where
