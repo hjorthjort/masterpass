@@ -41,30 +41,35 @@ ne = error "Not implemented"
 -------------------
 
 -- The standard dictionary.
-standardWords :: IO FilePath
+standardWords :: IO (Maybe FilePath)
 standardWords = standardWords' standardWordDicts
     where
-        standardWords' dicts = do
-            exists <- doesFileExist (head dicts)
+      standardWords' (f:fs) = do
+            -- Look for standard dictionary files.
+            exists <- doesFileExist f
             if exists
-               then return $ head dicts
-               else standardWords' (tail dicts)
+               then return $ Just f
+               else standardWords' fs
+      standardWords' [] = return Nothing
 
 main = do
     args <- getArgs
     let flags = getFlags args
     stdFile <- standardWords
-    let config = Config {
-        -- TODO: Allow using multiple files, e.g., for several languages.
-        wordsFile = maybeFlags stdFile "f" flags,
-        nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags,
-        useSpecialChars = isSet flagUseSpecials flags
-                          || isSet flagSpecialsList flags,
-        specialChars = maybeFlags standardSpecialChars flagSpecialsList flags,
-        useNumber = isSet flagUseNumber flags,
-        useUpperCase = isSet flagUseUpperCase  flags
-    }
-    printPassword config
+    case stdFile of
+      Nothing -> error "No dictionary file found."
+      Just stdFile' -> do
+        let config = Config {
+            -- TODO: Allow using multiple files, e.g., for several languages.
+            wordsFile = maybeFlags stdFile' "f" flags,
+            nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags,
+            useSpecialChars = isSet flagUseSpecials flags
+                              || isSet flagSpecialsList flags,
+            specialChars = maybeFlags standardSpecialChars flagSpecialsList flags,
+            useNumber = isSet flagUseNumber flags,
+            useUpperCase = isSet flagUseUpperCase  flags
+        }
+        printPassword config
 
 printPassword :: Config -> IO ()
 printPassword c = do
