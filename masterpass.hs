@@ -1,6 +1,6 @@
 import Data.Char(intToDigit, isAlpha, isUpper, toUpper)
 import Flags
-import System.Directory(doesFileExist)
+import System.Directory(doesFileExist, canonicalizePath)
 import System.Environment(getArgs)
 import System.Random(StdGen, newStdGen, randomR, randomRs)
 
@@ -46,9 +46,10 @@ standardWords = standardWords' standardWordDicts
     where
       standardWords' (f:fs) = do
             -- Look for standard dictionary files.
-            exists <- doesFileExist f
+            filePath <- canonicalizePath f
+            exists <- doesFileExist filePath
             if exists
-               then return $ Just f
+               then return $ Just filePath
                else standardWords' fs
       standardWords' [] = return Nothing
 
