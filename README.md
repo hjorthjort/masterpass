@@ -8,6 +8,8 @@ discussion on how to pick passwords][computerphile].
 
 # Building
 
+Requires Haskell. Specifically, you need `ghc` and may need to install extra packages through `cabal install`.
+
 Use `make` to build, or see the makefile for the build steps.
 
 [xkcd]: https://xkcd.com/936/
