@@ -1,12 +1,13 @@
 import Data.Char(intToDigit, isAlpha, isUpper, toUpper)
 import Data.Maybe(isNothing)
+import Data.List.Split(splitOn)
 import Flags
 import System.Directory(doesFileExist, canonicalizePath)
 import System.Environment(getArgs)
 import System.Random(StdGen, newStdGen, randomR, randomRs)
 
 type Password = String
-data Config = Config {wordsFile :: FilePath,
+data Config = Config {wordsFiles :: [FilePath],
                       nbrOfWords :: Int,
                       useSpecialChars :: Bool,
                       specialChars :: [Char],
@@ -23,10 +24,7 @@ errorTooManyArgs = "Masterpass takes one argument, which is a file of words.\n\
 errorNoFilename = "File flag takes a path as argument"
 -- TODO: Look in more places, to accomodate Windows. Current implementation is
 -- only for Unix systems. 
-standardWordDicts = [
-    "usr/dict/words",
-    "/usr/share/dict/words",
-    "/var/lib/dict/words"]
+standardWordDicts =  "dict/english"
 standardNrbOfWords = 3
 standardSpecialChars = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 digits = map intToDigit [0..9]
@@ -77,9 +75,14 @@ printPassword c = do
     password <- generateRandomPass c
     putStrLn password
 
+-- Get content of several files, with newline inbetween
+cat :: [FilePath] -> IO String
+cat files = fmap concat (sequence (map readFile files))
+
 generateRandomPass :: Config -> IO Password
 generateRandomPass c = do
-    wordsString <- readFile (wordsFile c)
+    -- Mash all provided files together.
+    wordsString <- cat (wordsFiles c)
     -- We use 3 different random numbers gens: for picking words, for picking
     -- inserting special characters and for inserting numbers.
     rands <- sequence $ take 4 $ [ newStdGen | x <- [1..] ]
@@ -101,6 +104,19 @@ generateRandomPass c = do
 
 -- Pure --
 ----------
+
+makeConfig flags =
+    Config {
+       wordsFiles = splitOn "," (maybeFlags standardWordDicts "f" flags),
+       nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags,
+       useSpecialChars = isSet flagUseSpecials flags
+                         || isSet flagSpecialsList flags,
+                         specialChars = maybeFlags standardSpecialChars flagSpecialsList flags,
+       useNumber = isSet flagUseNumber flags,
+       useUpperCase = isSet flagUseUpperCase  flags
+           }
+
+
 
 -- Return an infinite list of  elements randomly picked from input list.
 pickRandoms :: StdGen -> [a] -> [a]
