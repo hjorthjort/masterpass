@@ -2,7 +2,7 @@ import Data.Char(intToDigit, isAlpha, isUpper, toUpper)
 import Data.Maybe(isNothing)
 import Data.List.Split(splitOn)
 import Flags
-import System.Directory(doesFileExist, canonicalizePath)
+import System.Directory(getCurrentDirectory, doesFileExist, canonicalizePath)
 import System.Environment(getArgs)
 import System.Random(StdGen, newStdGen, randomR, randomRs)
 
@@ -24,7 +24,7 @@ errorTooManyArgs = "Masterpass takes one argument, which is a file of words.\n\
 errorNoFilename = "File flag takes a path as argument"
 -- TODO: Look in more places, to accomodate Windows. Current implementation is
 -- only for Unix systems. 
-standardWordDicts =  "dict/english"
+standardWordDicts =  "dict/english (american)"
 standardNrbOfWords = 3
 standardSpecialChars = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 digits = map intToDigit [0..9]
@@ -39,8 +39,9 @@ ne = error "Not implemented"
 -- IO and impure --
 -------------------
 main = do args <- getArgs
+          currentDir <- getCurrentDirectory
           let flags = parseFlags args
-          let config = makeConfig flags
+          let config = makeConfig flags currentDir
           printPassword config
 
 printPassword :: Config -> IO ()
@@ -78,9 +79,9 @@ generateRandomPass c = do
 -- Pure --
 ----------
 
-makeConfig flags =
+makeConfig flags currentDir =
     Config {
-       wordsFiles = splitOn "," (maybeFlags standardWordDicts "f" flags),
+       wordsFiles = splitOn "," (maybeFlags (currentDir ++ "/" ++ standardWordDicts) "f" flags),
        nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags,
        useSpecialChars = isSet flagUseSpecials flags
                          || isSet flagSpecialsList flags,
