@@ -43,33 +43,6 @@ main = do args <- getArgs
           let config = makeConfig flags
           printPassword config
 
-
--- The standard dictionary.
-standardWords :: IO (Maybe FilePath)
-standardWords = standardWords' standardWordDicts
-    where
-      standardWords' (f:fs) = do
-            -- Look for standard dictionary files.
-            filePath <- canonicalizePath f
-            exists <- doesFileExist filePath
-            if exists
-               then return $ Just filePath
-               else standardWords' fs
-      standardWords' [] = return Nothing
-
-makeConfig flags =
-    Config {
-       -- TODO: Allow using multiple files, e.g., for several languages.
-       wordsFile = maybeFlags (head standardWordDicts) "f" flags,
-       nbrOfWords = read $ maybeFlags (show standardNrbOfWords) "w" flags,
-       useSpecialChars = isSet flagUseSpecials flags
-                         || isSet flagSpecialsList flags,
-                         specialChars = maybeFlags standardSpecialChars flagSpecialsList flags,
-       useNumber = isSet flagUseNumber flags,
-       useUpperCase = isSet flagUseUpperCase  flags
-           }
-
-
 printPassword :: Config -> IO ()
 printPassword c = do
     password <- generateRandomPass c

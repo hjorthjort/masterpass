@@ -48,7 +48,11 @@ utandni7ngfickknivzymoloGiskfickkniv*zymologisk
        ^                ^           ^
 ```
 
-
+You can also specify **several dictionaries** by giving them as a comma-separated list.
+```
+$ ./out/masterpass -f="dict/english,dict/german"
+freelyschaltenKäse
+```
 
 # Building
 
