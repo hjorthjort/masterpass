@@ -20,8 +20,8 @@ for lang in ["Swedish", "English (American)", "German"]:
     filtered = lines[1:]
     # Only allow words with characters A-Z, a-z and 0-9.
     filtered = [ line for line in filtered if oddChars.search(line) is None ]
-    # Only allow words of 5 characters or more.
-    filtered = [ line for line in filtered if len(line) >= 5 ]
+    # Only allow words of 5 characters or more, and 10 or less
+    filtered = [ line for line in filtered if len(line) >= 5 and len(line) <= 10 ]
 
     with open('dict/%s' % lang.lower(), 'w') as f:
         print("\n".join(filtered), file=f)
