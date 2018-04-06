@@ -1,6 +1,7 @@
 import Data.Char(intToDigit, isAlpha, isUpper, toUpper)
 import Data.Maybe(isNothing)
 import Data.List.Split(splitOn)
+import Data.List(intersperse)
 import Flags
 import System.Directory(getCurrentDirectory, doesFileExist, canonicalizePath)
 import System.Environment(getArgs)
@@ -24,7 +25,7 @@ errorTooManyArgs = "Masterpass takes one argument, which is a file of words.\n\
 errorNoFilename = "File flag takes a path as argument"
 -- TODO: Look in more places, to accomodate Windows. Current implementation is
 -- only for Unix systems. 
-standardWordDicts =  "dict/english (american)"
+standardWordDicts =  "dict/english (american),dict/swedish,dict/german"
 standardNrbOfWords = 3
 standardSpecialChars = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 digits = map intToDigit [0..9]
@@ -60,21 +61,21 @@ generateRandomPass c = do
     -- We use 3 different random numbers gens: for picking words, for picking
     -- inserting special characters and for inserting numbers.
     rands <- sequence $ take 4 $ [ newStdGen | x <- [1..] ]
-    let words = lines wordsString
-        password = getRandomWords (nbrOfWords c) (rands !! 0) words
-        password' =
+    let candidateWords = lines wordsString
+        words = getRandomWords (nbrOfWords c) (rands !! 0) candidateWords
+        modifiedWords =
             if useUpperCase c
-               then randomMakeUpperCase password (rands !! 1)
-               else password
-        password'' =
+               then randomMakeUpperCase words (rands !! 1)
+               else words
+        modifiedWords' =
             if useSpecialChars c
-               then randomInsertChar (specialChars c) password' (rands !! 2)
-               else password'
-        password''' =
+               then randomInsertChar (specialChars c) modifiedWords (rands !! 2)
+               else modifiedWords
+        modifiedWords'' =
             if useNumber c
-               then randomInsertChar digits password'' (rands !! 3)
-               else password''
-    return password'''
+               then randomInsertChar digits modifiedWords' (rands !! 3)
+               else modifiedWords'
+    return $ concat $ intersperse " " modifiedWords''
 
 -- Pure --
 ----------
@@ -97,22 +98,28 @@ pickRandoms :: StdGen -> [a] -> [a]
 pickRandoms g list = [ list !! x | x <- randomRs (0, length list - 1) g ]
 
 -- Construct a password of random words from the word list.
-getRandomWords :: Int -> StdGen -> [String] -> Password
-getRandomWords numberOfWords g = concat . take numberOfWords . pickRandoms g
+getRandomWords :: Int -> StdGen -> [String] -> [String]
+getRandomWords numberOfWords g = take numberOfWords . pickRandoms g
 
 -- Inserts a character from a list in a random place into a password.
-randomInsertChar :: [Char] -> Password -> StdGen -> Password
-randomInsertChar specials pass g = insert r1 (specials !! r2) pass
+randomInsertChar :: [Char] -> [String] -> StdGen -> [String]
+randomInsertChar specials words g = replace r1 newWord words
     where
-        (r1, g') = randomR (0, length pass - 1) g
-        (r2, _) = randomR (0, length specials - 1) g'
+        (r1, g') = randomR (0, length words - 1) g
+        word = words !! r1
+        (r2, g'') = randomR (0, length specials - 1) g'
+        special = specials !! r2
+        (r3, _) = randomR (0, length (words !! r1) - 1) g
+        newWord = insert r3 special word
 
-randomMakeUpperCase :: Password -> StdGen -> Password
-randomMakeUpperCase password g 
-  | any isUpper password = password
-  | otherwise = replace r1 (toUpper $ password !! r1) password
+-- TODO: Bug in here, words get repeated
+randomMakeUpperCase :: [String] -> StdGen -> [String]
+randomMakeUpperCase words g = replace r1 newWord words
     where
-        (r1, _) = randomR (0, length password - 1) g
+        (r1, g') = randomR (0, length words - 1) g
+        word = words !! r1
+        (r2, _) = randomR (0, length (words !! r1) - 1) g
+        newWord = replace r2 (toUpper $ word !! r2) word
 
 insert :: Int -> a -> [a] -> [a]
 insert pos elem list = take pos list ++ (elem:drop pos list)
