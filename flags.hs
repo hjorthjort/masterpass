@@ -3,9 +3,10 @@
 -- | equals sign and an argument.
 -- | Example: -a, --add, --file=myfile.txt
 module Flags(
-    getFlags,
+    parseFlags,
     isSet,
     getFlagArg,
+    getFlagArgSafe,
     maybeFlags
             )
     where
@@ -20,8 +21,8 @@ type FlagList = Map Flag (Maybe FlagArg)
 
 -- | Takes a list of command line arguments and converts them to a dictionery of
 -- | flags and their values.
-getFlags :: [String] -> FlagList
-getFlags = fromList . map (\flag -> (parseFlag flag, if getFlagArg flag == []
+parseFlags :: [String] -> FlagList
+parseFlags = fromList . map (\flag -> (parseFlag flag, if getFlagArg flag == []
                                    then Nothing
                                    else Just (getFlagArg flag)
                          )
