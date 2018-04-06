@@ -10,7 +10,7 @@ module Flags(
             )
     where
 
-import Data.Map as Map
+import Data.Map as Map (Map, fromList, lookup)
 import Data.Maybe
 
 -- | A flag, such as -f or --no-edit
@@ -21,7 +21,7 @@ type FlagList = Map Flag (Maybe FlagArg)
 -- | Takes a list of command line arguments and converts them to a dictionery of
 -- | flags and their values.
 getFlags :: [String] -> FlagList
-getFlags = fromList . Prelude.map (\flag -> (parseFlag flag, if getFlagArg flag == []
+getFlags = fromList . map (\flag -> (parseFlag flag, if getFlagArg flag == []
                                    then Nothing
                                    else Just (getFlagArg flag)
                          )
