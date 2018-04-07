@@ -8,4 +8,4 @@ dictionaries:
 	python getdicts.py
 
 run:
-	./out/masterpass -u -n -use-specials
+	./out/masterpass -u -n -use-specials -w=4
