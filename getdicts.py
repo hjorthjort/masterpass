@@ -8,7 +8,7 @@ oddChars = re.compile(r'[^A-Za-z0-9]')
 
 # Swedish, English and German
 
-for lang in ["Swedish", "English (American)", "German"]:
+for lang in ["Swedish", "English (American)", "German_de_DE"]:
     url = 'https://raw.githubusercontent.com/titoBouzout/Dictionaries/master/%s.dic' % quote(lang)
     response = http.request('GET', url)
     print('Fetching ' + url)

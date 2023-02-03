@@ -25,7 +25,7 @@ errorTooManyArgs = "Masterpass takes one argument, which is a file of words.\n\
 errorNoFilename = "File flag takes a path as argument"
 -- TODO: Look in more places, to accomodate Windows. Current implementation is
 -- only for Unix systems. 
-standardWordDicts =  "dict/english (american),dict/swedish,dict/german"
+standardWordDicts =  "dict/english (american),dict/swedish,dict/german_de_de"
 standardNrbOfWords = 3
 standardSpecialChars = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 digits = map intToDigit [0..9]
